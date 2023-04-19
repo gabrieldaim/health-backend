@@ -44,6 +44,7 @@ def add_prato(form: PratosSchema):
     prato = Pratos(
         nome=form.nome,
         ingredientes=form.ingredientes,
+        descricao=form.descricao,
         preco=form.preco)
     try:
         # criando conexão com a base
@@ -75,6 +76,7 @@ def add_suco(form: SucosSchema):
     suco = Sucos(
         nome=form.nome,
         tamanho=form.tamanho,
+        descricao = form.descricao,
         preco=form.preco)
     try:
         # criando conexão com a base
@@ -116,6 +118,30 @@ def add_carrinho(form: carrinhoSchema):
         # efetivando o camando de adição de novo item na tabela
         session.commit()
         return apresenta_carrinho(carrinho), 200
+
+    except IntegrityError as e:
+        session.rollback()
+        err = e.args
+        return {"mesage": err}, 400
+
+@app.delete('/carrinho', tags=[carrinho_tag] , responses={
+    "400": ErrorSchema
+})
+def remove_carrinho(form: removeCarrinhoSchema):
+    """Adiciona um novo Produto à base de dados
+    Retorna uma representação dos produtos e comentários associados.
+    """
+    try:
+        # criando conexão com a base
+        session = Session()
+        # adicionando produto
+        produto = session.query(Carrinho).filter(Carrinho.id == form.id).first()
+        if not produto:
+            return {"mesage": "produto não encontrado na base"},404
+        session.query(Carrinho).filter(Carrinho.id == form.id).delete()
+        # efetivando o camando de adição de novo item na tabela
+        session.commit()
+        return apresenta_carrinho(produto), 200
 
     except IntegrityError as e:
         session.rollback()

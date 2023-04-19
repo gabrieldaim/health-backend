@@ -10,6 +10,7 @@ class Pratos(Base):
     id = Column(Integer, primary_key=True)
     nome = Column(String(255))
     ingredientes = Column(Text)
+    descricao = Column(Text)
     preco = Column(Float)
 
 
@@ -18,6 +19,7 @@ class Sucos(Base):
     id = Column(Integer, primary_key=True)
     nome = Column(String(255))
     tamanho = Column(Integer)
+    descricao = Column(Text)
     preco = Column(Float)
 
 class Carrinho(Base):
@@ -43,6 +45,3 @@ class Pedidos(Base):
     def changeStatus(self):
         self.status = not self.status 
 
-engine = create_engine('sqlite:///meu_banco_de_dados.db')  # Substitua pelo tipo de banco de dados que você deseja utilizar
-
-Base.metadata.create_all(engine)
