@@ -8,7 +8,7 @@ class carrinhoSchema(BaseModel):
     preco: float
 
 class removeCarrinhoSchema(BaseModel):
-    id: int
+    id: str
 
 def apresenta_carrinho(carrinho: Carrinho):
     return { 

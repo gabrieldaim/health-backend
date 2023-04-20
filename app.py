@@ -1,6 +1,7 @@
 from flask_openapi3 import OpenAPI, Info, Tag
 from flask import redirect, jsonify
 from flask_cors import CORS
+from urllib.parse import unquote
 
 from sqlalchemy.exc import IntegrityError
 
@@ -30,70 +31,26 @@ def home():
 
 @app.get('/prato', tags=[pratos_tag])
 def getPrato():
+    """Busca todos os itens da tabela pratos
+    """
     session = Session()
     pratos = session.query(Pratos).all()
     return jsonify({'pratos': [apresenta_prato(prato) for prato in pratos]})
 
-@app.post('/prato', tags=[pratos_tag] , responses={
-    "400": ErrorSchema
-})
-def add_prato(form: PratosSchema):
-    """Adiciona um novo Produto à base de dados
-    Retorna uma representação dos produtos e comentários associados.
-    """
-    prato = Pratos(
-        nome=form.nome,
-        ingredientes=form.ingredientes,
-        descricao=form.descricao,
-        preco=form.preco)
-    try:
-        # criando conexão com a base
-        session = Session()
-        # adicionando produto
-        session.add(prato)
-        # efetivando o camando de adição de novo item na tabela
-        session.commit()
-        return apresenta_prato(prato), 201
-
-    except IntegrityError as e:
-        session.rollback()
-        err = e.args
-        return {"mesage": err}, 400
 
 @app.get('/suco', tags=[sucos_tag])
 def getSuco():
+    """Busca todos os itens da tabela sucos
+    """
     session = Session()
     sucos = session.query(Sucos).all()
     return jsonify({'Sucos': [apresenta_suco(suco) for suco in sucos]})
 
-@app.post('/suco', tags=[sucos_tag] , responses={
-    "400": ErrorSchema
-})
-def add_suco(form: SucosSchema):
-    """Adiciona um novo Produto à base de dados
-    Retorna uma representação dos produtos e comentários associados.
-    """
-    suco = Sucos(
-        nome=form.nome,
-        tamanho=form.tamanho,
-        descricao = form.descricao,
-        preco=form.preco)
-    try:
-        # criando conexão com a base
-        session = Session()
-        # adicionando produto
-        session.add(suco)
-        # efetivando o camando de adição de novo item na tabela
-        session.commit()
-        return apresenta_suco(suco), 200
-
-    except IntegrityError as e:
-        session.rollback()
-        err = e.args
-        return {"mesage": err}, 400
     
 @app.get('/carrinho', tags=[carrinho_tag])
 def getCarrinho():
+    """Busca todos os itens da tabela carrinho
+    """
     session = Session()
     carrinho = session.query(Carrinho).all()
     return jsonify({'carrinho': [apresenta_carrinho(item) for item in carrinho]})
@@ -102,8 +59,7 @@ def getCarrinho():
     "400": ErrorSchema
 })
 def add_carrinho(form: carrinhoSchema):
-    """Adiciona um novo Produto à base de dados
-    Retorna uma representação dos produtos e comentários associados.
+    """Adiciona um novo Produto à base de dados de carrinho
     """
     carrinho = Carrinho(
         produto_nome=form.produto_nome,
@@ -128,17 +84,17 @@ def add_carrinho(form: carrinhoSchema):
     "400": ErrorSchema
 })
 def remove_carrinho(form: removeCarrinhoSchema):
-    """Adiciona um novo Produto à base de dados
-    Retorna uma representação dos produtos e comentários associados.
+    """remove um Produto à base de dados de carrinho
     """
     try:
         # criando conexão com a base
+        id_produto = unquote(unquote(form.id))
         session = Session()
         # adicionando produto
-        produto = session.query(Carrinho).filter(Carrinho.id == form.id).first()
+        produto = session.query(Carrinho).filter(Carrinho.id == id_produto).first()
         if not produto:
             return {"mesage": "produto não encontrado na base"},404
-        session.query(Carrinho).filter(Carrinho.id == form.id).delete()
+        session.query(Carrinho).filter(Carrinho.id == id_produto).delete()
         # efetivando o camando de adição de novo item na tabela
         session.commit()
         return apresenta_carrinho(produto), 200
@@ -150,6 +106,8 @@ def remove_carrinho(form: removeCarrinhoSchema):
 
 @app.get('/pedidos', tags=[pedidos_tag])
 def getPedidos():
+    """Busca todos os itens da tabela pedidos
+    """
     session = Session()
     pedidos = session.query(Pedidos).all()
     return jsonify({'pedidos': [apresenta_pedido(pedido) for pedido in pedidos]})
@@ -158,8 +116,7 @@ def getPedidos():
     "400": ErrorSchema
 })
 def add_pedido(form: pedidoSchema):
-    """Adiciona um novo Produto à base de dados
-    Retorna uma representação dos produtos e comentários associados.
+    """Adiciona um novo Produto à base de dados pedidos
     """
     pedido = Pedidos(produtos=form.produtos)
 
