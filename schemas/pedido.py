@@ -11,4 +11,5 @@ def apresenta_pedido(pedidos: Pedidos):
             "horario_criacao": pedidos.horario_criacao,
             "horario_conclusao": pedidos.horario_conclusao,
             "status": pedidos.status,
+            "endereco": pedidos.endereco
     }

@@ -2,6 +2,7 @@ from flask_openapi3 import OpenAPI, Info, Tag
 from flask import redirect, jsonify
 from flask_cors import CORS
 from urllib.parse import unquote
+from sqlalchemy.orm.session import close_all_sessions
 
 from sqlalchemy.exc import IntegrityError
 
@@ -19,6 +20,7 @@ pratos_tag = Tag(name="Pratos", description="Rotas relacionadas a tabela de prat
 sucos_tag = Tag(name="Sucos", description="Rotas relacionadas a tabela de Sucos")
 carrinho_tag = Tag(name="Carrinho", description="Rotas relacionadas a tabela de Carrinho")
 pedidos_tag = Tag(name="Pedidos", description="Rotas relacionadas a tabela de Pedidos")
+endereco_tag = Tag(name="Endereço", description="Rotas relacionadas a tabela de Endereo")
 
 
 
@@ -53,6 +55,7 @@ def getCarrinho():
     """
     session = Session()
     carrinho = session.query(Carrinho).all()
+    close_all_sessions()
     return jsonify({'carrinho': [apresenta_carrinho(item) for item in carrinho]})
 
 @app.post('/carrinho', tags=[carrinho_tag] , responses={
@@ -73,12 +76,53 @@ def add_carrinho(form: carrinhoSchema):
         session.add(carrinho)
         # efetivando o camando de adição de novo item na tabela
         session.commit()
-        return apresenta_carrinho(carrinho), 200
+        close_all_sessions()
+        return "produto adicionado no carrinho!", 200
 
     except IntegrityError as e:
         session.rollback()
         err = e.args
         return {"mesage": err}, 400
+
+@app.get('/endereco', tags=[endereco_tag])
+def getEndereco():
+    """Busca todos os itens da tabela endereco
+    """
+    session = Session()
+    endereco = session.query(Endereco).first()
+    return jsonify({'Endereco': apresenta_endereco(endereco)})
+
+@app.put('/endereco', tags=[endereco_tag] , responses={
+    "400": ErrorSchema
+})
+def add_endereco(form: enderecoSchema):
+    """Adiciona ou edita um novo endereço à base de dados de endereco
+    """
+
+    try:
+        # criando conexão com a base
+        session = Session()
+        # adicionando produto
+        endereco = session.query(Endereco).filter(Endereco.id=='1').first()
+        if (endereco == None):
+            endereco = Endereco()
+        endereco.cep= form.cep
+        endereco.logradouro= form.logradouro
+        endereco.numero= form.numero
+        endereco.bairro= form.bairro
+        endereco.estado= form.estado
+        endereco.complemento= form.complemento
+        session.add(endereco)
+        # efetivando o camando de adição de novo item na tabela
+        session.commit()
+        close_all_sessions()
+        return "produto adicionado no carrinho!", 200
+    except IntegrityError as e:
+        session.rollback()
+        err = e.args
+        return {"mesage": err}, 400
+    
+
 
 @app.delete('/carrinho', tags=[carrinho_tag] , responses={
     "400": ErrorSchema
@@ -97,7 +141,8 @@ def remove_carrinho(form: removeCarrinhoSchema):
         session.query(Carrinho).filter(Carrinho.id == id_produto).delete()
         # efetivando o camando de adição de novo item na tabela
         session.commit()
-        return apresenta_carrinho(produto), 200
+        close_all_sessions()
+        return "Produto deletado do carrinho!", 200
 
     except IntegrityError as e:
         session.rollback()
@@ -123,6 +168,10 @@ def add_pedido(form: pedidoSchema):
     try:
         # criando conexão com a base
         session = Session()
+
+        # adiciona endereco no pedido
+        endereco = session.query(Endereco).first()
+        pedido.endereco = endereco.cep + "|"+endereco.logradouro+"|"+endereco.numero+"|"+endereco.bairro+"|"+endereco.estado+"|"+endereco.complemento
         # adicionando produto
         session.add(pedido)
         # efetivando o camando de adição de novo item na tabela
@@ -130,13 +179,16 @@ def add_pedido(form: pedidoSchema):
         carrinho = session.query(Carrinho).all()
         for item in carrinho:
             session.delete(item)
+        session.delete(endereco)
         session.commit()
-        return apresenta_pedido(pedido), 200
+        close_all_sessions()
+        return "pedido realizado e todos os itens do carrinho foram limpos!", 200
 
     except IntegrityError as e:
         session.rollback()
         err = e.args
         return {"mesage": err}, 400
-    
+
+
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=5000, debug=True)

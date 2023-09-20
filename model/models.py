@@ -30,6 +30,16 @@ class Carrinho(Base):
     quantidade = Column(Integer)
     preco = Column(Float)
 
+class Endereco(Base):
+    __tablename__ = 'endereco'
+    id = Column(Integer, primary_key=True)
+    cep = Column(Text)
+    logradouro = Column(Text)
+    numero = Column(Text)
+    bairro = Column(Text)
+    estado = Column(Text)
+    complemento = Column(Text)
+
 class Pedidos(Base):
     __tablename__ = 'pedidos'
     id = Column(Integer, primary_key=True)
@@ -37,10 +47,12 @@ class Pedidos(Base):
     horario_criacao = Column(DateTime, default=datetime.utcnow)
     horario_conclusao = Column(DateTime)
     status = Column(String, default=False) 
+    endereco = Column(Text)
 
     def __init__(self,produtos):
+        print(produtos)
         self.produtos = produtos
-        self.horario_conclusao = datetime.utcnow() + timedelta(minutes=10)
+        self.horario_conclusao = datetime.utcnow() + timedelta(minutes=25)
     
     def changeStatus(self):
         self.status = not self.status 

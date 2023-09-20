@@ -1,6 +1,6 @@
 from sqlalchemy_utils import database_exists, create_database
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy import create_engine
+from sqlalchemy import MetaData, Table, create_engine
 import os
 
 # importando os elementos definidos no modelo
@@ -16,10 +16,11 @@ if not os.path.exists(db_path):
 db_url = 'sqlite:///%s/db.sqlite3' % db_path
 
 # cria a engine de conexão com o banco
-engine = create_engine(db_url, echo=False)
+engine = create_engine(db_url, echo=False, pool_size=20, max_overflow=0)
 
 # Instancia um criador de seção com o banco
 Session = sessionmaker(bind=engine)
+
 
 # cria o banco se ele não existir 
 if not database_exists(engine.url):
